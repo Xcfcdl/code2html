@@ -88,7 +88,7 @@ async function handleRequest(req, res) {
       const publicUrl = `https://code2html.dooleaf.cn/${fileName}`;
 
       res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ message: 'HTML saved successfully', url: publicUrl }));
+      res.end(JSON.stringify(publicUrl));
     } catch (error) {
       console.error('Error saving HTML:', error);
       res.writeHead(500, { 'Content-Type': 'application/json' });
