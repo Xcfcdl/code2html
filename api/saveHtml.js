@@ -23,6 +23,12 @@ async function handleRequest(req, res) {
         await new Promise(resolve => req.on('end', resolve));
         try {
           parsedBody = JSON.parse(body);
+          // Ensure htmlString exists and is a string
+          if (!parsedBody.htmlString || typeof parsedBody.htmlString !== 'string') {
+            res.writeHead(400, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ error: 'Missing or invalid htmlString in request body' }));
+            return;
+          }
         } catch (e) {
           res.writeHead(400, { 'Content-Type': 'application/json' });
           res.end(JSON.stringify({ error: 'Invalid JSON in request body' }));
@@ -43,9 +49,9 @@ async function handleRequest(req, res) {
       }
 
 
-      if (!htmlString || typeof htmlString !== 'string' || typeof props !== 'string') {
+      if (!htmlString || typeof htmlString !== 'string') {
         res.writeHead(400, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ error: 'Missing or invalid htmlString in request body' }));
+        res.end(JSON.stringify({ error: 'Missing or invalid htmlString in request body', details: { received: typeof htmlString, expected: 'string' } }));
         return;
       }
 
