@@ -11,22 +11,28 @@ const PORT = 3011;
 async function handleRequest(req, res) {
   if (req.method === 'POST') {
     try {
-      // Manually parse JSON body for Node.js HTTP server
-      let body = '';
-      req.on('data', chunk => {
-        body += chunk.toString();
-      });
-      await new Promise(resolve => req.on('end', resolve));
-
-      let parsedBody;
-      try {
-        parsedBody = JSON.parse(body);
-      } catch (e) {
-        res.writeHead(400, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ error: 'Invalid JSON in request body' }));
-        return;
+      let parsedBody = {};
+      const url = new URL(req.url, `http://${req.headers.host}`);
+      
+      // Check if request has JSON body
+      if (req.headers['content-type'] === 'application/json') {
+        let body = '';
+        req.on('data', chunk => {
+          body += chunk.toString();
+        });
+        await new Promise(resolve => req.on('end', resolve));
+        try {
+          parsedBody = JSON.parse(body);
+        } catch (e) {
+          res.writeHead(400, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: 'Invalid JSON in request body' }));
+          return;
+        }
       }
-      const { htmlString, apiKey } = parsedBody;
+      
+      // Get parameters from URL
+      const htmlString = url.searchParams.get('htmlString') || parsedBody.htmlString;
+      const apiKey = url.searchParams.get('apiKey') || parsedBody.apiKey;
 
       // Verify API key
       const apiKeys = JSON.parse(fs.readFileSync(path.join(process.cwd(), 'API_KEY.json'), 'utf8')).validApiKeys;
@@ -63,8 +69,14 @@ async function handleRequest(req, res) {
       const fileName = `doc_${Date.now()}_${Math.random().toString(36).substring(2, 7)}.html`;
       const filePath = path.join(generatedHtmlDir, fileName);
 
-      // Save the HTML string to the file
-      await writeFile(filePath, htmlString);
+      // Preprocess HTML string to remove unwanted markdown markers
+      const cleanedHtmlString = htmlString
+        .replace(/```html/g, '')
+        .replace(/```/g, '')
+        .trim();
+
+      // Save the cleaned HTML string to the file
+      await writeFile(filePath, cleanedHtmlString);
 
       // Construct the public URL
       // Vercel automatically serves files from the 'public' directory at the root
