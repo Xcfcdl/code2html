@@ -43,7 +43,7 @@ async function handleRequest(req, res) {
       }
 
 
-      if (!htmlString || typeof htmlString !== 'string') {
+      if (!htmlString || typeof htmlString !== 'string' || typeof props !== 'string') {
         res.writeHead(400, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ error: 'Missing or invalid htmlString in request body' }));
         return;
@@ -90,8 +90,13 @@ async function handleRequest(req, res) {
       res.end(JSON.stringify({ error: 'Failed to save HTML content' }));
     }
   } else {
-    res.writeHead(405, { 'Allow': 'POST', 'Content-Type': 'text/plain' });
-    res.end(`Method ${req.method} Not Allowed`);
+    if (req.url === '/favicon.ico') {
+      res.writeHead(204, { 'Content-Type': 'image/x-icon' });
+      res.end();
+    } else {
+      res.writeHead(405, { 'Allow': 'POST', 'Content-Type': 'text/plain' });
+      res.end(`Method ${req.method} Not Allowed`);
+    }
   }
 }
 
