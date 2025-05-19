@@ -1,6 +1,7 @@
-POST http://localhost:3000/api/saveHtml
+POST http://localhost:3011/api/saveHtml
 Content-Type: application/json
 
 {
-  "htmlString": "<!DOCTYPE html><html><head><title>Test HTML</title></head><body><h1>Hello, World!</h1><p>This is a test HTML content.</p></body></html>"
+  "htmlString": "<!DOCTYPE html><html><head><title>Test HTML</title></head><body><h1>Hello, World!</h1><p>This is a test HTML content.</p></body></html>",
+  "apiKey": "Kj8Qw2Lm9Px4Rv7Tn6Zy"
 }

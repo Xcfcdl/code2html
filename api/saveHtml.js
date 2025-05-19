@@ -26,7 +26,16 @@ async function handleRequest(req, res) {
         res.end(JSON.stringify({ error: 'Invalid JSON in request body' }));
         return;
       }
-      const { htmlString } = parsedBody;
+      const { htmlString, apiKey } = parsedBody;
+
+      // Verify API key
+      const apiKeys = JSON.parse(fs.readFileSync(path.join(process.cwd(), 'API_KEY.json'), 'utf8')).validApiKeys;
+      if (!apiKey || !apiKeys.includes(apiKey)) {
+        res.writeHead(401, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'Unauthorized: Invalid API key' }));
+        return;
+      }
+
 
       if (!htmlString || typeof htmlString !== 'string') {
         res.writeHead(400, { 'Content-Type': 'application/json' });
