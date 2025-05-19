@@ -55,12 +55,11 @@ async function handleRequest(req, res) {
         return;
       }
 
-      // Ensure the public/generated_html directory exists
+      // Ensure the public directory exists
       const publicDir = path.join(process.cwd(), 'public');
-      const generatedHtmlDir = path.join(publicDir, 'generated_html');
 
       try {
-        await mkdir(generatedHtmlDir, { recursive: true });
+        await mkdir(publicDir, { recursive: true });
       } catch (error) {
         // Ignore EEXIST error, which means the directory already exists
         if (error.code !== 'EEXIST') {
@@ -73,7 +72,7 @@ async function handleRequest(req, res) {
 
       // Generate a unique filename
       const fileName = `doc_${Date.now()}_${Math.random().toString(36).substring(2, 7)}.html`;
-      const filePath = path.join(generatedHtmlDir, fileName);
+      const filePath = path.join(publicDir, fileName);
 
       // Preprocess HTML string to remove unwanted markdown markers
       const cleanedHtmlString = htmlString
@@ -86,7 +85,7 @@ async function handleRequest(req, res) {
 
       // Construct the public URL
       // Vercel automatically serves files from the 'public' directory at the root
-      const publicUrl = `https://code2html.dooleaf.cn/generated_html/${fileName}`;
+      const publicUrl = `https://code2html.dooleaf.cn/${fileName}`;
 
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ message: 'HTML saved successfully', url: publicUrl }));
@@ -100,8 +99,16 @@ async function handleRequest(req, res) {
       res.writeHead(204, { 'Content-Type': 'image/x-icon' });
       res.end();
     } else if (req.method === 'GET') {
-      res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ message: 'GET request received' }));
+      const fileName = req.url.substring(1);
+      const filePath = path.join(process.cwd(), 'public', fileName);
+      try {
+        const htmlContent = fs.readFileSync(filePath, 'utf8');
+        res.writeHead(200, { 'Content-Type': 'text/html' });
+        res.end(htmlContent);
+      } catch (error) {
+        res.writeHead(404, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'File not found' }));
+      }
     } else {
       res.writeHead(405, { 'Allow': 'POST, GET', 'Content-Type': 'text/plain' });
       res.end(`Method ${req.method} Not Allowed`);
