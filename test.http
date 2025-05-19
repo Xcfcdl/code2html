@@ -1,0 +1,6 @@
+POST https://code2html-c3zsu2cat-xcfcdls-projects.vercel.app/api/saveHtml
+Content-Type: application/json
+
+{
+  "htmlString": "<!DOCTYPE html><html><head><title>Test HTML</title></head><body><h1>Hello, World!</h1><p>This is a test HTML content.</p></body></html>"
+}
