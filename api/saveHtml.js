@@ -6,7 +6,7 @@ import http from 'http';
 const mkdir = promisify(fs.mkdir);
 const writeFile = promisify(fs.writeFile);
 
-const PORT = process.env.PORT || 3000;
+const PORT = 3011;
 
 async function handleRequest(req, res) {
   if (req.method === 'POST') {
@@ -59,7 +59,7 @@ async function handleRequest(req, res) {
 
       // Construct the public URL
       // Vercel automatically serves files from the 'public' directory at the root
-      const publicUrl = `/generated_html/${fileName}`;
+      const publicUrl = `https://code2html.dooleaf.cn/generated_html/${fileName}`;
 
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ message: 'HTML saved successfully', url: publicUrl }));
