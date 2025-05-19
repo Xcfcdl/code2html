@@ -99,8 +99,11 @@ async function handleRequest(req, res) {
     if (req.url === '/favicon.ico') {
       res.writeHead(204, { 'Content-Type': 'image/x-icon' });
       res.end();
+    } else if (req.method === 'GET') {
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ message: 'GET request received' }));
     } else {
-      res.writeHead(405, { 'Allow': 'POST', 'Content-Type': 'text/plain' });
+      res.writeHead(405, { 'Allow': 'POST, GET', 'Content-Type': 'text/plain' });
       res.end(`Method ${req.method} Not Allowed`);
     }
   }
