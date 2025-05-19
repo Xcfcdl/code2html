@@ -1,17 +1,37 @@
 import fs from 'fs';
 import path from 'path';
 import { promisify } from 'util';
+import http from 'http';
 
 const mkdir = promisify(fs.mkdir);
 const writeFile = promisify(fs.writeFile);
 
-export default async function handler(req, res) {
+const PORT = process.env.PORT || 3000;
+
+async function handleRequest(req, res) {
   if (req.method === 'POST') {
     try {
-      const { htmlString } = req.body;
+      // Manually parse JSON body for Node.js HTTP server
+      let body = '';
+      req.on('data', chunk => {
+        body += chunk.toString();
+      });
+      await new Promise(resolve => req.on('end', resolve));
+
+      let parsedBody;
+      try {
+        parsedBody = JSON.parse(body);
+      } catch (e) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'Invalid JSON in request body' }));
+        return;
+      }
+      const { htmlString } = parsedBody;
 
       if (!htmlString || typeof htmlString !== 'string') {
-        return res.status(400).json({ error: 'Missing or invalid htmlString in request body' });
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'Missing or invalid htmlString in request body' }));
+        return;
       }
 
       // Ensure the public/generated_html directory exists
@@ -24,7 +44,9 @@ export default async function handler(req, res) {
         // Ignore EEXIST error, which means the directory already exists
         if (error.code !== 'EEXIST') {
           console.error('Error creating directory:', error);
-          return res.status(500).json({ error: 'Failed to create directory for HTML files' });
+          res.writeHead(500, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: 'Failed to create directory for HTML files' }));
+          return;
         }
       }
 
@@ -39,13 +61,22 @@ export default async function handler(req, res) {
       // Vercel automatically serves files from the 'public' directory at the root
       const publicUrl = `/generated_html/${fileName}`;
 
-      res.status(200).json({ message: 'HTML saved successfully', url: publicUrl });
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ message: 'HTML saved successfully', url: publicUrl }));
     } catch (error) {
       console.error('Error saving HTML:', error);
-      res.status(500).json({ error: 'Failed to save HTML content' });
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: 'Failed to save HTML content' }));
     }
   } else {
-    res.setHeader('Allow', ['POST']);
-    res.status(405).end(`Method ${req.method} Not Allowed`);
+    res.writeHead(405, { 'Allow': 'POST', 'Content-Type': 'text/plain' });
+    res.end(`Method ${req.method} Not Allowed`);
   }
 }
+
+const server = http.createServer(handleRequest);
+
+server.listen(PORT, () => {
+  console.log(`Server listening on port ${PORT}`);
+  console.log(`Access the API at http://localhost:${PORT}`);
+});
