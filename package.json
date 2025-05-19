@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "API to save HTML strings and return a public URL",
   "main": "index.js",
+  "type": "module",
   "scripts": {
     "start": "node api/saveHtml.js"
   },
